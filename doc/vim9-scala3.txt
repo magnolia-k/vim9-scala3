@@ -140,6 +140,8 @@ Scala 2（中括弧ベース）とScala 3（Optional Braces）の両方のイン
   - アロー演算子: =>, <-
   - 代入演算子: =
   - コロン（Scala 3 Optional Braces）: テンプレート定義末尾の :
+  - extensionブロック: extension (...) や extension [T](...) のように
+    )で終わる行（コロンなしの場合も含む）
   - 制御構文キーワード: if, else, for, while, do, then, yield,
     return, throw
   - matchキーワード

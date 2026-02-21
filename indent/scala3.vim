@@ -110,6 +110,15 @@ def GetScala3Indent(): number
   endif
 
   if !increased
+    # extension block without trailing colon: extension (...) or extension [T](...)
+    # The closing ) is balanced so bracket logic won't catch it
+    if prev_trimmed =~ '^\s*extension\>.*)\s*$'
+      ind += sw
+      increased = true
+    endif
+  endif
+
+  if !increased
     # Control flow keywords alone on a line start a block
     if prev_trimmed =~ '^\s*\(if\|else\|for\|while\|do\|then\|yield\|return\|throw\)\s*$'
       ind += sw
