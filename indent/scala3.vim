@@ -112,7 +112,9 @@ def GetScala3Indent(): number
   if !increased
     # extension block without trailing colon: extension (...) or extension [T](...)
     # The closing ) is balanced so bracket logic won't catch it
+    # Exclude single-line extension methods: extension (...) def method(...)
     if prev_trimmed =~ '^\s*extension\>.*)\s*$'
+          && prev_trimmed !~ '\<def\>\|\<val\>\|\<var\>'
       ind += sw
       increased = true
     endif
