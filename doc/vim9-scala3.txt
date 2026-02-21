@@ -1,0 +1,240 @@
+*vim9-scala3.txt*	Scala 3用Vimプラグイン
+
+			vim9-scala3 リファレンスマニュアル
+
+==============================================================================
+目次						*vim9-scala3-contents*
+
+1. 概要						|vim9-scala3-overview|
+2. 動作要件					|vim9-scala3-requirements|
+3. インストール					|vim9-scala3-installation|
+4. 機能一覧					|vim9-scala3-features|
+   4.1 ファイルタイプ検出			|vim9-scala3-ftdetect|
+   4.2 シンタックスハイライト			|vim9-scala3-syntax|
+   4.3 インデント				|vim9-scala3-indent|
+   4.4 エディタ設定				|vim9-scala3-ftplugin|
+5. 対応するScala 3構文				|vim9-scala3-scala3|
+6. ライセンス					|vim9-scala3-license|
+
+==============================================================================
+1. 概要						*vim9-scala3-overview*
+
+vim9-scala3は、Scala 3のための包括的なVimプラグインです。Vim9Scriptで記述さ
+れており、シンタックスハイライト、インデント、ファイルタイプ検出、エディタ設
+定を提供します。
+
+Scala 3のOptional Braces（インデントベース構文）と従来のScala 2スタイルの
+両方をサポートします。
+
+==============================================================================
+2. 動作要件					*vim9-scala3-requirements*
+
+- Vim 9.2以降
+
+==============================================================================
+3. インストール					*vim9-scala3-installation*
+
+パッケージマネージャを使用する場合:
+
+vim-plug: >
+  Plug 'your-name/vim9-scala3'
+<
+
+lazy.nvim (Neovimは非対応): >
+  このプラグインはVim9Scriptで記述されているため、Neovimでは動作しません。
+<
+
+手動インストール: >
+  git clone https://github.com/your-name/vim9-scala3.git
+  cp -r vim9-scala3/* ~/.vim/
+<
+
+Vimパッケージ機能: >
+  mkdir -p ~/.vim/pack/plugins/start
+  cd ~/.vim/pack/plugins/start
+  git clone https://github.com/your-name/vim9-scala3.git
+<
+
+==============================================================================
+4. 機能一覧					*vim9-scala3-features*
+
+------------------------------------------------------------------------------
+4.1 ファイルタイプ検出				*vim9-scala3-ftdetect*
+
+以下のファイル拡張子を自動検出します:
+
+  拡張子		ファイルタイプ ~
+  *.scala		scala3
+  *.sc			scala3（Scalaスクリプト）
+  *.sbt			scala3（sbtビルドファイル）
+
+------------------------------------------------------------------------------
+4.2 シンタックスハイライト			*vim9-scala3-syntax*
+
+以下の構文要素をハイライトします:
+
+ハードキーワード: ~
+  abstract, case, catch, class, def, do, else, enum, export, extends,
+  false, final, finally, for, given, if, implicit, import, lazy, match,
+  new, null, object, override, package, private, protected, return,
+  sealed, super, then, throw, trait, true, try, type, val, var, while,
+  with, yield
+
+ソフトキーワード（Scala 3）: ~
+  as, derives, end, extension, infix, inline, opaque, open, transparent,
+  using
+
+組み込み型: ~
+  Int, String, Boolean, Double, Float, Long, Short, Byte, Char, Unit,
+  Nothing, Null, Any, AnyRef, AnyVal, BigInt, BigDecimal
+
+コレクション・エフェクト型: ~
+  Option, Some, None, List, Map, Set, Seq, Vector, Either, Left, Right,
+  Future, Try, Success, Failure, Tuple, Array, ArrayBuffer, ListBuffer,
+  Iterator, LazyList, Stream, Range
+
+リテラル: ~
+  - 整数リテラル（10進数、16進数 0x、2進数 0b、Long修飾子 L）
+  - 浮動小数点リテラル（F/D修飾子、科学的記法）
+  - 文字リテラル（エスケープシーケンス、Unicodeエスケープ）
+  - 文字列リテラル（通常、三重引用符、補間文字列 s"", f"", raw""）
+
+コメント: ~
+  - 行コメント（//）
+  - ブロックコメント（/* */、ネスト対応）
+  - Scaladocコメント（/** */、タグハイライト対応）
+  - TODO/FIXME/XXXキーワードのハイライト
+
+アノテーション: ~
+  @annotation形式のアノテーション
+
+シンボル演算子: ~
+  =>, <-, <:, >:, =>>, ?=>, #, _（ワイルドカード）
+
+ハイライトグループ: ~
+  scalaKeyword		→ Keyword
+  scalaSoftKeyword	→ Keyword
+  scalaBoolean		→ Boolean
+  scalaNull		→ Constant
+  scalaSpecial		→ Special
+  scalaType		→ Type
+  scalaAnnotation	→ PreProc
+  scalaOperator		→ Operator
+  scalaString		→ String
+  scalaCharacter	→ Character
+  scalaNumber		→ Number
+  scalaFloat		→ Float
+  scalaLineComment	→ Comment
+  scalaBlockComment	→ Comment
+  scalaDocComment	→ Comment
+  scalaTodo		→ Todo
+
+------------------------------------------------------------------------------
+4.3 インデント					*vim9-scala3-indent*
+
+Scala 2（中括弧ベース）とScala 3（Optional Braces）の両方のインデントスタ
+イルをサポートします。
+
+インデント増加トリガー: ~
+  - 開き括弧: {, (, [
+  - アロー演算子: =>, <-
+  - 代入演算子: =
+  - コロン（Scala 3 Optional Braces）: テンプレート定義末尾の :
+  - 制御構文キーワード: if, else, for, while, do, then, yield,
+    return, throw
+  - matchキーワード
+
+インデント減少トリガー: ~
+  - 閉じ括弧: }, ), ]
+  - endキーワード（Scala 3）
+  - else, catch, finallyキーワード
+  - caseキーワード（matchブロック内の整列）
+  - thenキーワード（ifとの整列）
+
+継続行: ~
+  - メソッドチェーン（.で始まる行）の自動インデント
+
+Scala 3 Optional Braces: ~
+  コロン（:）で終わるテンプレート定義の後にインデントが増加します。
+  例: >
+    class MyClass:
+      def hello(): Unit =
+        println("Hello")
+    end MyClass
+<
+
+------------------------------------------------------------------------------
+4.4 エディタ設定				*vim9-scala3-ftplugin*
+
+以下の設定が自動的に適用されます:
+
+  設定項目		値 ~
+  commentstring		// %s
+  shiftwidth		2
+  softtabstop		2
+  expandtab		有効
+  suffixesadd		.scala
+  matchpairs		(:), {:}, [:]
+  formatoptions		-t +croqnlj
+
+これらの設定はScalaコミュニティの標準的なコーディング規約に従っています。
+
+==============================================================================
+5. 対応するScala 3構文				*vim9-scala3-scala3*
+
+このプラグインは以下のScala 3固有の構文をサポートします:
+
+enum型: >
+  enum Color:
+    case Red, Green, Blue
+<
+
+givenインスタンス: >
+  given Ordering[Int] with
+    def compare(x: Int, y: Int): Int = x - y
+<
+
+extensionメソッド: >
+  extension (s: String)
+    def greet: String = s"Hello, $s!"
+<
+
+Optional Braces: >
+  def factorial(n: Int): Int =
+    if n <= 1 then 1
+    else n * factorial(n - 1)
+<
+
+endマーカー: >
+  class MyClass:
+    def longMethod(): Unit =
+      // ...
+    end longMethod
+  end MyClass
+<
+
+usingパラメータ: >
+  def process(data: Data)(using ctx: Context): Result =
+    // ...
+<
+
+opaqueタイプ: >
+  opaque type Name = String
+<
+
+inlineメソッド: >
+  inline def debug(msg: String): Unit =
+    println(msg)
+<
+
+exportクロース: >
+  export myModule.{given, *}
+<
+
+==============================================================================
+6. ライセンス					*vim9-scala3-license*
+
+MIT License
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
