@@ -135,6 +135,13 @@ syntax match scalaTypeRef '\<[A-Z][a-zA-Z0-9_]*\>' contained
 syntax match scalaAnnotation '@[a-zA-Z_][a-zA-Z0-9_.]*'
 
 # ============================================================================
+# Unimplemented placeholder
+# ============================================================================
+
+# ??? is Scala's standard "not implemented" expression (throws NotImplementedError)
+syntax match scalaUnimplemented '???'
+
+# ============================================================================
 # Symbol operators
 # ============================================================================
 
@@ -180,5 +187,8 @@ highlight default link scalaBlockComment   Comment
 highlight default link scalaDocComment     Comment
 highlight default link scalaDocTag         SpecialComment
 highlight default link scalaTodo           Todo
+
+# ??? is highlighted prominently as unimplemented code
+highlight default scalaUnimplemented cterm=bold,underline ctermfg=9 gui=bold,underline guifg=#FF4500
 
 b:current_syntax = 'scala3'

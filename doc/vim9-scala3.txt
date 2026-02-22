@@ -111,6 +111,13 @@ Vimパッケージ機能: >
 シンボル演算子: ~
   =>, <-, <:, >:, =>>, ?=>, #, _（ワイルドカード）
 
+未実装プレースホルダー: ~
+  ??? は実行時に NotImplementedError をスローするScalaの標準的な未実装マーカー
+  です。太字・下線・赤橙色（guifg=#FF4500）で目立つ表示になります。
+  カスタマイズ例: >
+    highlight scalaUnimplemented guifg=#FFAA00 gui=bold,underline
+<
+
 ハイライトグループ: ~
   scalaKeyword		→ Keyword
   scalaSoftKeyword	→ Keyword
@@ -128,6 +135,7 @@ Vimパッケージ機能: >
   scalaBlockComment	→ Comment
   scalaDocComment	→ Comment
   scalaTodo		→ Todo
+  scalaUnimplemented	→ （独自ハイライト: bold,underline, ctermfg=9, guifg=#FF4500）
 
 ------------------------------------------------------------------------------
 4.3 インデント					*vim9-scala3-indent*
@@ -233,6 +241,13 @@ inlineメソッド: >
 exportクロース: >
   export myModule.{given, *}
 <
+
+未実装プレースホルダー: >
+  def notYet(): Int = ???
+<
+  ??? は `scala.Predef` で定義された `def ??? : Nothing` であり、呼び出すと
+  `NotImplementedError` をスローします。実装前のメソッドのスタブとして広く使用
+  されます。このプラグインでは太字・下線・赤橙色の目立つハイライトで表示します。
 
 ==============================================================================
 6. ライセンス					*vim9-scala3-license*
