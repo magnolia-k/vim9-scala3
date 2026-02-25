@@ -22,16 +22,12 @@ if exists('*GetScala3Indent')
 endif
 
 # Pattern for colon-based block start (Scala 3 Optional Braces)
-const COLON_BLOCK_PATTERN = '^\s*\(class\|trait\|object\|enum\|def\|val\|var\|given\|extension\|if\|else\|for\|while\|match\|try\|catch\|finally\|then\|new\)\>.*:\s*$'
+# Allows optional modifiers (abstract, sealed, final, open, case, override, inline,
+# transparent, lazy) before the main keyword.
+const COLON_BLOCK_PATTERN = '^\s*\(\(abstract\|sealed\|final\|open\|case\|override\|inline\|transparent\|lazy\)\s\+\)*\(class\|trait\|object\|enum\|def\|val\|var\|given\|extension\|if\|else\|for\|while\|match\|try\|catch\|finally\|then\|new\)\>.*:\s*$'
 
 const MATCH_PATTERN = '\<match\>\s*$'
 const CONTINUATION_PATTERN = '^\s*\.'
-
-# Check if a line is inside a comment or string
-def IsInSyntaxGroup(lnum: number, col: number): bool
-  var synname = synIDattr(synID(lnum, col, true), 'name')
-  return synname =~? 'comment\|string\|multiline'
-enddef
 
 # Get the previous non-blank, non-comment line
 def GetPrevCodeLine(lnum: number): number
@@ -70,8 +66,9 @@ def GetScala3Indent(): number
   var sw = shiftwidth()
   var ind = prev_indent
 
-  # Skip if current position is inside a multiline comment or string
-  if lnum > 1 && IsInSyntaxGroup(lnum, 1) && line !~ '^\s*\(/\|\*\)'
+  # Skip block comment continuation lines (* or */) - text-based, no synID needed
+  # Note: synID is unreliable during batch operations (gg=G) due to stale cache.
+  if lnum > 1 && line =~ '^\s*\*'
     return ind
   endif
 
@@ -96,6 +93,15 @@ def GetScala3Indent(): number
   if !increased
     # Increase indent after =>, <-, = at end of line
     if prev_trimmed =~ '=>\s*$' || prev_trimmed =~ '<-\s*$' || prev_trimmed =~ '=\s*$'
+      ind += sw
+      increased = true
+    endif
+  endif
+
+  if !increased
+    # Increase indent when prev line ends with { but has net-zero brace balance
+    # e.g. "} else {", "} catch {", "} finally {"
+    if prev_trimmed =~ '{\s*$' && brace_bal == 0
       ind += sw
       increased = true
     endif
@@ -144,6 +150,30 @@ def GetScala3Indent(): number
     endif
   endif
 
+  if !increased
+    # Scala 3: while ... do / for ... do at end of line
+    if prev_trimmed =~ '\<do\>\s*$'
+      ind += sw
+      increased = true
+    endif
+  endif
+
+  if !increased
+    # Scala 3: 'if ... then' at end of line - body goes on next line
+    if prev_trimmed =~ '\<then\>\s*$'
+      ind += sw
+      increased = true
+    endif
+  endif
+
+  if !increased
+    # Scala 3: 'given/new/extends ... with' at end of line introduces a body
+    if prev_trimmed =~ '\<with\>\s*$'
+      ind += sw
+      increased = true
+    endif
+  endif
+
   # ---- Indent decrease rules ----
 
   # Decrease indent for closing brackets on current line
@@ -161,9 +191,35 @@ def GetScala3Indent(): number
     ind += cur_bracket_bal * sw
   endif
 
-  # 'end' keyword decreases indent
-  if line =~ '^\s*end\>'
+  # '} else', '} catch', '} finally' - brace closed one level, keyword stays same
+  # The } and { (if present) balance out, so we need to explicitly decrease
+  if line =~ '^\s*}\s*\(else\|catch\|finally\)\>'
     ind -= sw
+  endif
+
+  # 'end X' keyword - search backward for matching block start
+  if line =~ '^\s*end\>'
+    var end_tag = matchstr(line, '^\s*end\s\+\zs\w*')
+    if end_tag != ''
+      # Search backward for the matching class/object/def/trait/enum/extension/given
+      var check_lnum = prev_lnum
+      while check_lnum > 0
+        var check_line = getline(check_lnum)
+        # For 'given', only match a named given (name followed by ':' or 'with'),
+        # not an anonymous given whose type happens to contain end_tag (e.g. given Show[Int]).
+        if check_line =~ '\<\(class\|object\|trait\|enum\|def\|extension\|package\)\s\+' .. end_tag .. '\>'
+              || check_line =~ '\<\(case\s\+class\|case\s\+object\)\s\+' .. end_tag .. '\>'
+              || check_line =~ '\<given\s\+' .. end_tag .. '\>\s*[:{]'
+              || check_line =~ '\<given\s\+' .. end_tag .. '\>\s*with\>'
+          ind = indent(check_lnum)
+          break
+        endif
+        check_lnum -= 1
+      endwhile
+    else
+      # 'end' without tag - decrease by one level
+      ind -= sw
+    endif
   endif
 
   # 'else' aligns with 'if'
@@ -176,7 +232,15 @@ def GetScala3Indent(): number
   # 'catch' / 'finally' align with 'try'
   if line =~ '^\s*\(catch\|finally\)\>'
     if prev_line !~ '^\s*\(try\|catch\)\>' && prev_line !~ '{\s*$'
-      ind -= sw
+      # Search backward for matching try/catch to align correctly regardless of nesting depth
+      var try_lnum = prev_lnum
+      while try_lnum > 0
+        if getline(try_lnum) =~ '^\s*\(try\|catch\)\>'
+          ind = indent(try_lnum)
+          break
+        endif
+        try_lnum -= 1
+      endwhile
     endif
   endif
 
@@ -210,6 +274,19 @@ def GetScala3Indent(): number
     endwhile
   endif
 
+  # 'yield' aligns with 'for'
+  if line =~ '^\s*yield\>'
+    var check_lnum = prev_lnum
+    while check_lnum > 0
+      var check_line = getline(check_lnum)
+      if check_line =~ '^\s*for\>'
+        ind = indent(check_lnum)
+        break
+      endif
+      check_lnum -= 1
+    endwhile
+  endif
+
   # ---- Continuation lines ----
 
   # Method chain continuation: indent when starting a chain
@@ -223,6 +300,17 @@ def GetScala3Indent(): number
     endwhile
     if check_lnum > 0
       ind = indent(check_lnum)
+      # Re-apply closing bracket adjustments that were computed before chain logic
+      # (the chain-start assignment overwrites them)
+      if cur_brace_bal < 0
+        ind += cur_brace_bal * sw
+      endif
+      if cur_paren_bal < 0
+        ind += cur_paren_bal * sw
+      endif
+      if cur_bracket_bal < 0
+        ind += cur_bracket_bal * sw
+      endif
     endif
   endif
 
