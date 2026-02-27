@@ -450,3 +450,25 @@ object Result:
       yield a :: as
     }
 end Result
+
+// ---------------------------------------------------------------------------
+// 21. // コメント行のインデント継続
+// ---------------------------------------------------------------------------
+
+// コメントアウトした行の後でリターンを押すと、コメントと同じインデントが維持される
+
+class CommentContinuation:
+  // comment at class body level
+  val x = 1
+  // first consecutive comment
+  // second consecutive comment
+  val y = 2
+end CommentContinuation
+
+def commentInMethod(): Unit =
+  // comment at top of method body
+  val a = 1
+  // first comment before assignment
+  // second comment before assignment
+  val b = 2
+  val c = 3

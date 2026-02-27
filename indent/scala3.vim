@@ -54,6 +54,21 @@ enddef
 def GetScala3Indent(): number
   var lnum = v:lnum
   var line = getline(lnum)
+
+  # If the immediately preceding non-blank line is a // comment,
+  # continue at the same indent level instead of computing from the
+  # underlying code line (which may apply indent-increase rules and shift by one level).
+  # Exception: lines with explicit indent-change triggers are handled by the
+  # standard rules below (end, closing brackets, else/catch/finally/then/yield/case).
+  var immediately_prev = prevnonblank(lnum - 1)
+  if immediately_prev > 0 && getline(immediately_prev) =~ '^\s*//'
+        && line !~ '^\s*end\>'
+        && line !~ '^\s*[}\])]'
+        && line !~ '^\s*\(else\|catch\|finally\|then\|yield\)\>'
+        && line !~ '^\s*case\>'
+    return indent(immediately_prev)
+  endif
+
   var prev_lnum = GetPrevCodeLine(lnum)
 
   # First line

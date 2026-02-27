@@ -370,3 +370,23 @@ object Result {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// 15. // コメント行のインデント継続
+// ---------------------------------------------------------------------------
+
+class CommentContinuation2 {
+  // comment at class body level
+  val x = 1
+  // first consecutive comment
+  // second consecutive comment
+  val y = 2
+
+  def method(): Unit = {
+    // comment at method body level
+    val a = 1
+    // first comment before assignment
+    // second comment before assignment
+    val b = 2
+  }
+}
