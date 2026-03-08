@@ -1,22 +1,46 @@
- - Vim用のプラグインを作ります
- - コードは全てVim9Scriptで書きます
- - Vim9Scriptは、vim9.2以降を対象とします（バージョンチェックを入れて下さい）
- - 仕様は全て @doc ディレクトリにまとめてください
- - コードと仕様は必ず一致させてください
- - ドキュメントは全て日本語で書いて下さい
- - コードのコメントは全て英語で書いて下さい
- - 既に、scalafmt がインストール済の環境であれば、テストしたファイルに対してscalafmtを実行し、差分が出ないようにしてください
+# vim9-scala3 開発ガイド
 
-vimのヘルプは以下を参照します
+## プロジェクト概要
 
- https://vim-jp.org/vimdoc-ja/
+Scala 3 用の Vim プラグイン（Vim9Script で実装）
 
-Scala3のシンタックスについては以下を参照します
+### ファイル構成
 
- https://docs.scala-lang.org/scala3/reference/syntax.html
+```
+ftdetect/scala3.vim   - ファイルタイプ検出
+syntax/scala3.vim     - シンタックスハイライト
+indent/scala3.vim     - インデント
+ftplugin/scala3.vim   - ファイルタイプ設定
+doc/vim9-scala3.txt   - ヘルプドキュメント
+test/                 - テストファイル群（test/README.md 参照）
+```
 
-インデントは、Optional Braceをサポートします
+## コーディングルール
 
- https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html
+- コードは全て **Vim9Script** で書く（Vim 9.2 以降対象）
+  - バージョンチェック: `if v:version < 902`
+- コードのコメントは**英語**で書く
+- ドキュメント（doc/, CLAUDE.md 等）は**日本語**で書く
+- 仕様は全て `doc/` ディレクトリにまとめ、コードと必ず一致させる
 
- ただし、従来のScala2ベースのインデントもサポートします
+## テスト
+
+- テストしたファイルに `scalafmt` を実行し、差分が出ないようにする
+- テスト手順の詳細は `test/README.md` を参照
+
+## 重要な実装上の決定事項
+
+- **ファイルタイプ名**: `scala3`（`scala` ではない。Vim 組み込みの scala サポートとの衝突を避けるため）
+- **ftdetect**: `setfiletype` でなく `set filetype=scala3` を使う（Vim 組み込みの検出を上書きするため）
+- **インデント関数名**: `GetScala3Indent()`（組み込みの `GetScalaIndent()` との衝突を避けるため）
+
+## 対応する Scala 構文
+
+- Scala 3 の Optional Brace スタイル（インデントベース）
+- 従来の Scala 2 ベースのブレーススタイル
+
+## 参照ドキュメント
+
+- Vim ヘルプ: https://vim-jp.org/vimdoc-ja/
+- Scala 3 シンタックス: https://docs.scala-lang.org/scala3/reference/syntax.html
+- Optional Brace: https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html
