@@ -260,7 +260,11 @@ def GetScala3Indent(): number
   endif
 
   # 'case' inside match block - align with prior cases
-  if line =~ '^\s*case\>' && prev_line !~ MATCH_PATTERN
+  # Exclude 'case class' and 'case object' (declarations handled separately below).
+  # Exclude a lone 'case' (user still typing via 0=case indentkey; preserve indent).
+  if line =~ '^\s*case\>' && line !~ '^\s*case\s\+\(class\|object\)\>'
+        && line !~ '^\s*case\s*$'
+        && prev_line !~ MATCH_PATTERN
     var check_lnum = prev_lnum
     while check_lnum > 0
       var check_line = getline(check_lnum)
@@ -275,6 +279,39 @@ def GetScala3Indent(): number
       endif
       check_lnum -= 1
     endwhile
+  endif
+
+  # 'case class' / 'case object' declarations - align with sibling declarations.
+  # Regular match arms are skipped; only case class/object siblings count.
+  # If no sibling is found and the previous code line was a match arm, escape the
+  # match block by using the first non-case enclosing line's indent level.
+  if line =~ '^\s*case\s\+\(class\|object\)\>'
+    var check_lnum = prev_lnum
+    var found_sibling = false
+    while check_lnum > 0
+      var check_line = getline(check_lnum)
+      if check_line =~ '^\s*case\s\+\(class\|object\)\>'
+        ind = indent(check_lnum)
+        found_sibling = true
+        break
+      elseif indent(check_lnum) <= 0 && check_line !~ '^\s*$'
+        break
+      endif
+      check_lnum -= 1
+    endwhile
+    if !found_sibling && prev_line =~ '^\s*case\>'
+      # Previous code line was a match arm: search for the first non-case
+      # enclosing line to escape the match block's indent level.
+      var enc_lnum = prev_lnum
+      while enc_lnum > 0
+        var enc_line = getline(enc_lnum)
+        if enc_line !~ '^\s*case\>' && enc_line !~ '^\s*$'
+          ind = indent(enc_lnum)
+          break
+        endif
+        enc_lnum -= 1
+      endwhile
+    endif
   endif
 
   # 'then' keyword (Scala 3) aligns with 'if'

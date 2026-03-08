@@ -472,3 +472,25 @@ def commentInMethod(): Unit =
   // second comment before assignment
   val b = 2
   val c = 3
+
+// ---------------------------------------------------------------------------
+// 22. case class / case object must not be treated as match-case clauses
+// ---------------------------------------------------------------------------
+
+// Bug: 'case class' and 'case object' start with the 'case' keyword, which
+// triggers the match-case indent rule and wrongly aligns them with match arms.
+
+object CaseClassAfterMatch3:
+  def classify(x: Int): String = x match
+    case 1 => "one"
+    case _ => "other"
+
+  // These declarations must stay at object-body indent (2), not match-arm indent (4).
+  case class InnerData(x: Int)
+  case object InnerSingleton
+
+  sealed trait Status
+  case object Active extends Status
+  case object Inactive extends Status
+  case class WithMessage(msg: String) extends Status
+end CaseClassAfterMatch3

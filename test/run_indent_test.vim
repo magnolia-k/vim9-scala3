@@ -169,10 +169,13 @@ def TestFileLineByLine(original: string, label: string)
       # This handles nested match expressions where the outer case follows inner cases
       # (plugin cannot determine correct indent without lookahead).
       # Other 'case' scenarios (enum members after methods, etc.) are plugin-handled.
+      # Exception: 'case class' and 'case object' are declarations, not match branches.
+      # The plugin should handle them explicitly, so do NOT skip them here.
       if expected_indent < prev_indent
             && cur_line !~ '^\s*[}\])]'
             && cur_line !~ '^\s*\(end\|else\|catch\|finally\|then\|yield\)\>'
             && (cur_line !~ '^\s*case\>' || getline(prev_lnum) =~ '^\s*case\>')
+            && cur_line !~ '^\s*case\s\+\(class\|object\)\>'
         is_implicit_dedent = true
       endif
     endif
