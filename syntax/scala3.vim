@@ -98,8 +98,12 @@ syntax keyword scalaKeyword with yield
 syntax keyword scalaKeyword enum export given then
 
 # Soft keywords (Scala 3)
+# Note: 'transparent' cannot be used in 'syntax keyword' because Vim interprets
+# it as a command option (making the group transparent) rather than a keyword.
+# Use 'syntax match' instead.
 syntax keyword scalaSoftKeyword as derives end extension infix inline opaque
-syntax keyword scalaSoftKeyword open transparent using
+syntax keyword scalaSoftKeyword open using
+syntax match   scalaSoftKeyword '\<transparent\>'
 
 # Boolean literals
 syntax keyword scalaBoolean true false
