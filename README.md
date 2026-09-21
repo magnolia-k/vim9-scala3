@@ -33,6 +33,13 @@ filetype plugin indent on
 syntax enable
 ```
 
+## Type highlighting
+
+Identifiers beginning with an ASCII capital letter, such as `Int`, `String`,
+`User`, and `A` in `List[A]`, use the `scalaType` group (linked to `Type`).
+This naming-based rule also colors capitalized objects and values; lowercase
+and backtick-quoted type names are not recognized as types.
+
 ## Indentation policy
 
 The indenter adds one `shiftwidth()` only when the Scala grammar makes a deeper

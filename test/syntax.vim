@@ -104,3 +104,54 @@ assert_equal('scalaVarargSplice', h.SyntaxAt(8, 'xs\zs\*'))
 assert_equal('scalaPatternAlternative', h.SyntaxAt(9, '|'))
 assert_equal('scalaVariance', h.SyntaxAt(10, '+'))
 assert_equal('scalaVariance', h.SyntaxAt(10, '-'))
+
+# Comment terminators must restore highlighting, including the overlapping
+# documentation opener/closer in an empty /**/ comment.
+for comment in ['/**/', '/** documentation */', '/* comment */',
+    '/* outer /* nested */ outer */', '/** outer /* nested */ outer */']
+  h.NewScala([comment .. ' val after = 1', 'val next = 2'])
+  assert_equal('scalaDeclaration', h.SyntaxAt(1, '\<val\>'), comment)
+  assert_equal('scalaNumber', h.SyntaxAt(1, '1'), comment)
+  assert_equal('scalaDeclaration', h.SyntaxAt(2, '\<val\>'), comment)
+endfor
+
+h.NewScala([
+  '/** documentation',
+  ' * outer /* nested',
+  ' * nested */ still documentation',
+  ' */',
+  'val after = 1',
+])
+assert_equal('scalaBlockComment', h.SyntaxAt(3, 'nested'))
+assert_equal('scalaDocComment', h.SyntaxAt(3, 'still'))
+assert_equal('scalaDeclaration', h.SyntaxAt(5, 'val'))
+
+h.NewScala([
+  'class User[A] extends Base derives Eq',
+  'def find(id: Int): Option[List[User]] = None',
+  'type Result = String | Throwable',
+  'type Handler = User => Unit',
+  'val items: scala.collection.immutable.Map[String, List[User]] = Map.empty',
+  'import example.User',
+  'val userName = "User Int"',
+  '// User Int',
+  '/* User Int */',
+  '/** User Int */',
+  'val `User` = 1',
+  '@User def run(): Unit = ()',
+])
+for [lnum, names] in [[1, ['User', 'A', 'Base', 'Eq']],
+    [2, ['Int', 'Option', 'List', 'User', 'None']],
+    [3, ['Result', 'String', 'Throwable']], [4, ['Handler', 'User', 'Unit']],
+    [5, ['Map', 'String', 'List', 'User']], [6, ['User']], [12, ['Unit']]]
+  for name in names
+    assert_equal('scalaType', h.SyntaxAt(lnum, '\<' .. name .. '\>'), $'{name} on line {lnum}')
+  endfor
+endfor
+assert_equal('Type', synIDattr(synIDtrans(hlID('scalaType')), 'name'))
+assert_notequal('scalaType', h.SyntaxAt(7, 'userName'))
+for [lnum, group] in [[7, 'scalaString'], [8, 'scalaLineComment'],
+    [9, 'scalaBlockComment'], [10, 'scalaDocComment'],
+    [11, 'scalaBacktickIdentifier'], [12, 'scalaAnnotation']]
+  assert_equal(group, h.SyntaxAt(lnum, 'User'))
+endfor

@@ -8,6 +8,10 @@ syntax case match
 
 syntax keyword scalaTodo TODO FIXME XXX NOTE contained
 
+# Follow the conventional initial capital for type names. Syntax highlighting
+# cannot distinguish these from capitalized term names without semantic data.
+syntax match scalaType "\<[A-Z][A-Za-z0-9_$]*\>"
+
 # Literals.  More specific numeric forms precede the decimal fallback.
 syntax match scalaNumber "\<0[xX][0-9A-Fa-f_]\+[lL]\?\>"
 syntax match scalaNumber "\<0[bB][01_]\+[lL]\?\>"
@@ -55,14 +59,14 @@ syntax match scalaModifier "[(,]\s*\zs\<using\>"
 syntax match scalaTypeKeyword "\<derives\>\ze[[:space:]]\+[A-Za-z_$]"
 syntax match scalaException "\<throws\>\ze[[:space:]]\+[A-Za-z_$]"
 syntax match scalaInclude "\<as\>" containedin=scalaImportClause
-syntax region scalaImportClause start="\<\%(import\|export\)\>" end="$" transparent contains=scalaInclude,scalaBacktickIdentifier
+syntax region scalaImportClause start="\<\%(import\|export\)\>" end="$" transparent contains=scalaInclude,scalaBacktickIdentifier,scalaType
 
 # Symbolic regular keywords and context-dependent soft symbols.
 syntax match scalaKeywordOperator "=>>\|?=>\|=>\|<-\|<:\|>:"
 syntax match scalaKeywordOperator "[#@]"
 syntax match scalaAnnotation "@[A-Za-z_$][A-Za-z0-9_$.]*"
 syntax match scalaVariance "[+-]\ze\s*[A-Za-z_$][A-Za-z0-9_$]*" containedin=scalaTypeParameters
-syntax region scalaTypeParameters start="\[" end="\]" transparent contains=scalaVariance,scalaModifier,scalaAnnotation
+syntax region scalaTypeParameters start="\[" end="\]" transparent contains=scalaVariance,scalaModifier,scalaAnnotation,scalaType,scalaTypeParameters
 syntax match scalaWildcardImport "\.\zs\*"
 syntax match scalaVarargSplice "\<[A-Za-z_$][A-Za-z0-9_$]*\zs\*"
 syntax match scalaPatternAlternative "\s\zs|\ze\s"
@@ -74,8 +78,11 @@ syntax match scalaSplice "\$\ze[{]"
 # Define comments after operators and keywords so their opening delimiters win.
 syntax match scalaLineComment "//.*$" contains=scalaTodo,@Spell
 syntax region scalaBlockComment start="/\*" end="\*/" contains=scalaBlockComment,scalaTodo,@Spell fold
-syntax region scalaDocComment start="/\*\*" end="\*/" contains=scalaBlockComment,scalaTodo,@Spell fold
+# Keep the opener out of nested matches; leave the third star available to
+# close an empty documentation comment (/**/).
+syntax region scalaDocComment matchgroup=scalaDocComment start="/\*\ze\*" end="\*/" contains=scalaBlockComment,scalaTodo,@Spell fold
 
+highlight default link scalaType Type
 highlight default link scalaTodo Todo
 highlight default link scalaLineComment Comment
 highlight default link scalaBlockComment Comment
