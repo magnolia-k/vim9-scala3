@@ -1,0 +1,5 @@
+.metals/
+.scala-build/
+test.scala
+*.swp
+*~

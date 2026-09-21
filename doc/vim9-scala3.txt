@@ -1,0 +1,64 @@
+*vim9-scala3.txt*       Scala 3.9 support written in Vim9 script
+
+===============================================================================
+CONTENTS                                                *vim9-scala3-contents*
+
+1. Introduction.................................|vim9-scala3-introduction|
+2. Installation...................................|vim9-scala3-installation|
+3. Indentation.....................................|vim9-scala3-indentation|
+4. Development.....................................|vim9-scala3-development|
+
+===============================================================================
+1. INTRODUCTION                                    *vim9-scala3-introduction*
+
+vim9-scala3 supplies filetype detection, syntax highlighting, and conservative
+indentation for the stable Scala 3.9 language.  It detects *.scala, *.sc, and
+*.sbt files and uses the standard "scala" filetype.
+
+The implementation is based on the official Scala 3.9 grammar.  It was written
+without consulting the source of existing Scala Vim plugins.
+
+Requirements: Vim 9.1 or newer.
+
+===============================================================================
+2. INSTALLATION                                      *vim9-scala3-installation*
+
+Install this directory as a Vim package or add it to 'runtimepath', then use: >
+
+        filetype plugin indent on
+        syntax enable
+<
+There are no user commands, mappings, or plugin-specific settings.
+
+The standard 'formatoptions' flags "r" and "o" are enabled locally.  Enter in
+Insert mode and the Normal-mode |o| command therefore continue // comments and
+block-comment leaders on the following line.
+
+===============================================================================
+3. INDENTATION                                        *vim9-scala3-indentation*
+
+The value of 'shiftwidth' determines the minimum new indentation depth.  The
+plugin does not change 'shiftwidth', 'tabstop', or 'expandtab'.
+
+Indentation is added only when the preceding source requires a deeper region.
+An existing indentation that is already deeper is retained.  Ambiguous layout
+is returned unchanged, including indentation within braces or parentheses,
+leading infix operators, and a case after match or catch.  Branch and end
+markers are outdented only when their owner can be found unambiguously.
+
+Strings, interpolated strings, character literals, backtick identifiers, line
+comments, and nested block comments do not accidentally trigger indentation.
+
+===============================================================================
+4. DEVELOPMENT                                        *vim9-scala3-development*
+
+The Vim test suite has no external dependencies: >
+
+        make test
+<
+Use "make check" to run the test suite and |git-diff| whitespace checks.  The
+optional compiler fixture requires a Scala 3.9 scalac: >
+
+        make test-scala
+<
+ vim:tw=78:ts=8:noet:ft=help:norl:
